@@ -25,7 +25,13 @@ Completa al menos las cuatro variables obligatorias, o el backend no arranca (fa
 | `REDIS_URL` | Con Compose: `redis://redis:6379/0` |
 | `APP_SECRET_KEY` | Aleatorio, ≥16 caracteres: `openssl rand -hex 32` |
 
-Cada variable está documentada en [`.env.example`](../.env.example). **Nunca commitees `.env`.**
+Cada variable está documentada en [`.env.example`](../.env.example). **Nunca commitees `.env`.** El archivo vive en la raíz del repositorio; `Settings` lo resuelve por ruta absoluta, así que los comandos del backend funcionan igual ejecutándose desde `backend/`.
+
+### Conectar a Supabase
+
+Usa el **Session pooler**, no la conexión directa: `db.<ref>.supabase.co` solo publica registro AAAA (IPv6) y falla en cualquier red o plataforma sin IPv6. El host del pooler tiene la forma `aws-1-<región>.pooler.supabase.com` y el usuario es `postgres.<ref>` (no `postgres` a secas).
+
+**Percent-encodea los caracteres especiales de la contraseña.** Un `+` literal se interpreta como espacio al parsear la URL y la autenticación falla con un error de credenciales que no sugiere la causa real: escríbelo `%2B`. Igual con `@` (`%40`), `:` (`%3A`), `/` (`%2F`) y `#` (`%23`).
 
 ## 3. Arranque local
 

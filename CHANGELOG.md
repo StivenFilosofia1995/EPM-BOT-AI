@@ -16,6 +16,10 @@ Versionado semántico. Commits en [Conventional Commits](https://www.conventiona
 - **Corregido el criterio de aceptación de P2A** contra el archivo real `Programacion_Formativa Biblioteca_Julio_2026.xlsx`: son **23 filas de datos** (8 infantil + 15 jóvenes y adultos) que producen **50 actividades** tras expandir las fechas (11 + 39), no 23 actividades. El criterio anterior confundía filas de origen con actividades resultantes y habría fallado por construcción. Verificado ejecutando la regla §3 del contrato sobre el archivo; el prompt ahora incluye el desglose de los dos casos de expansión más delicados (`Todos los martes de julio` ⇒ 4; `Del 23 de junio al 9 de julio` con `Martes y jueves` ⇒ 6, de las cuales 3 con warning `out_of_month`). Reflejado también en `docs/ROADMAP.md`.
 - **Detectado un caso real no cubierto por el contrato** y añadido a P2A: la fila «Semillero de robótica intensivo» trae en la columna `Enlace de inscripción` el texto `No disponible por cúpos completados`, que no es una URL. La tabla de decisión del §7 asume que un valor presente en esa columna es un enlace válido. Pendiente de definir la regla y añadirla al contrato.
 
+### Corregido
+
+- `Settings` resolvía `.env` de forma relativa al directorio de trabajo, así que no lo encontraba al ejecutar los comandos del backend desde `backend/`, tal como indica `CONTRIBUTING.md`. Ahora la ruta se resuelve de forma absoluta contra la raíz del repositorio, conservando `.env` local como respaldo. Documentado en `docs/DEPLOYMENT.md`, junto con las dos trampas de conexión a Supabase: la conexión directa es solo IPv6 (hay que usar el Session pooler, `aws-1-<región>.pooler.supabase.com` con usuario `postgres.<ref>`) y los caracteres especiales de la contraseña deben ir percent-encoded en la URL.
+
 ### Añadido
 
 - **Bootstrap del monorepo `epm-wa-platform`** (fase P0). Esqueleto listo para desarrollo, sin lógica de negocio.

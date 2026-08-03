@@ -6,6 +6,7 @@ arrancar con un estado inconsistente.
 """
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
@@ -13,12 +14,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Environment = Literal["development", "staging", "production", "test"]
 
+# El `.env` vive en la raíz del repositorio, pero los comandos del backend se
+# ejecutan desde `backend/`. Se resuelve por ruta absoluta para que funcione
+# desde cualquier cwd. En Docker no existe el archivo y las variables llegan
+# por el entorno (env_file del compose): pydantic-settings ignora la ruta
+# inexistente sin error.
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
 
 class Settings(BaseSettings):
     """Configuración global del backend, por bloques (ver CLAUDE.md §9)."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(_REPO_ROOT / ".env", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
