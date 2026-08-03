@@ -28,6 +28,10 @@ dev = [
     "ruff>=0.7,<1.0",
     "mypy>=1.13,<2.0",
     "pip-audit>=2.7,<3.0",
+    # Stubs de tipos. `mypy --strict` falla sin ellos, así que van declarados:
+    # instalarlos solo en la máquina de quien programa hace que CI rompa
+    # aunque en local pase todo.
+    "types-PyYAML>=6.0,<7.0",
 ]
 
 [build-system]

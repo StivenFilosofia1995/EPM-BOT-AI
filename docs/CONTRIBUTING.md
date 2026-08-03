@@ -51,7 +51,15 @@ npm run lint
 npm run build
 ```
 
-Es exactamente lo que corre CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)), así que si pasa local, pasa allá.
+Es exactamente lo que corre CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)) — **siempre que no hayas instalado nada a mano**.
+
+> **Trampa conocida.** Si instalas un paquete con `pip install <algo>` sin añadirlo a `pyproject.toml`, tu entorno lo tiene y el de CI no: todo pasa en local y el build rompe al subir. Pasa sobre todo con los stubs de tipos (`types-*`), que `mypy --strict` exige. Regla: **si lo instalas, lo declaras**, en el mismo commit.
+>
+> Para reproducir el entorno de CI cuando algo no cuadre:
+> ```bash
+> cd backend && pip install -e ".[dev]"   # solo lo declarado
+> ```
+> Los tests que necesitan base de datos se saltan solos si no hay `.env`, igual que en CI.
 
 ## 3. Convenciones de código
 
