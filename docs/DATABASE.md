@@ -148,6 +148,15 @@ alembic current            # revisión actual
 
 Toda migración lleva `upgrade` y `downgrade` **reales y probados** (CLAUDE.md §1.8). El de la inicial se verificó de punta a punta: `upgrade head` → `downgrade base` → `upgrade head`.
 
+### Ver el SQL sin aplicarlo
+
+```bash
+cd backend
+alembic upgrade head --sql        # imprime el DDL en vez de ejecutarlo
+```
+
+Hay un volcado ya generado en [`infra/supabase/schema.sql`](../infra/supabase/schema.sql), útil para revisar el esquema de un vistazo. Es **solo referencia**: la fuente de verdad es la migración, y ejecutar ese archivo a mano en el editor SQL de Supabase descuadraría `alembic_version` y rompería la siguiente migración. La contraseña del rol va redactada en el volcado.
+
 `downgrade` elimina las 16 tablas y el rol `epm_app`, pero **no borra las extensiones**, por dos motivos distintos: `pgcrypto` ya existía y no le corresponde a esta migración destruirla; `vector` sí la creó, pero borrarla afecta a un esquema compartido y dejarla es inocuo — no ocupa nada sin columnas que la usen, y el `upgrade` es idempotente gracias al `IF NOT EXISTS`.
 
 ## 8. Seed
