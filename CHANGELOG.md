@@ -5,6 +5,18 @@ Versionado semántico. Commits en [Conventional Commits](https://www.conventiona
 
 ## [No publicado]
 
+### Añadido — P1: dominio, base de datos y multitenancy
+
+- **`domain/`**: value objects frozen (`TenantId`, `WaId` con validación E.164 y enmascarado para logs, `Wamid`, `ConversationWindow.is_open()` para la ventana de 24 h, `Money` en centavos, `DateRange`, `Audience`, `Confidence`), 12 entidades sin ORM y 5 puertos ABC (`MessagingPort`, `AIProviderPort`, `KnowledgeRetrieverPort`, `ConversationRepositoryPort`, `IngestionSourcePort`).
+- **16 tablas SQLAlchemy 2 async** con `tenant_id` como primera columna de todo índice compuesto. Índices parciales para la idempotencia de webhooks (`messages` únicos por `wamid` solo cuando existe) y para la deduplicación del pipeline (ignorando las actividades borradas).
+- **Migración inicial reversible** con extensiones `pgcrypto` y `pgvector`, verificada de punta a punta: `upgrade head` → `downgrade base` → `upgrade head`.
+- **Rol de aplicación `epm_app`** (`NOBYPASSRLS`, sin `CREATE`) y **RLS activado y forzado** en las 16 tablas, con `USING` y `WITH CHECK` contra `app.tenant_id`. Sin tenant en contexto no se ve ninguna fila.
+- **`BaseTenantRepository`** que inyecta el filtro de tenant y rechaza escrituras con un `tenant_id` ajeno, más `SqlAlchemyConversationRepository`.
+- **`TenantContext`** y `tenant_session()`, que emite `SET LOCAL app.tenant_id` por transacción.
+- **Seed de la Fundación** idempotente: tenant, 17 espacios y 20 `venue_facts`, todos con `source_url` y `verified_at`. Los datos marcados «Pendiente» en `KB_FUNDACION_EPM.md` §5 se omiten (horario general de la Biblioteca, horarios de las 14 UVA, correo público del Parque de los Deseos).
+- **74 tests**, incluidos 8 de aislamiento multitenant ejecutados contra Supabase real con el rol de aplicación.
+- **`docs/DATABASE.md`** con el esquema, las decisiones de índices y la política de RLS.
+
 ### Cambiado
 
 - **La fuente primaria de programación pasa a ser el Excel interno de la Fundación**, no Issuu (**ADR 009**, en `docs/adr/009-excel-como-fuente-primaria.md`). El Excel es estructurado, autoritativo y llega antes que cualquier publicación; Issuu, la página oficial y las páginas de espacio quedan como respaldo y verificación.

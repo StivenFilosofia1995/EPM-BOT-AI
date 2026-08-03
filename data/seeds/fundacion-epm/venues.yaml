@@ -1,0 +1,166 @@
+# Los 17 espacios del Ecosistema de Experiencias Sostenibles operados por la
+# Fundación Grupo EPM: Museo del Agua + Biblioteca EPM + Parque de los Deseos
+# + 14 UVA.
+#
+# Fuente: KB_FUNDACION_EPM.md §3 — verificado 2026-08-03.
+#
+# Las 4 UVA operadas por el INDER NO están aquí a propósito: el bot no responde
+# por ellas (KB §3.4).
+
+- slug: museo-del-agua
+  name: Museo del Agua EPM
+  kind: museo
+  address: "Carrera 57 # 42-139, Parque de los Pies Descalzos"
+  neighborhood: La Alpujarra
+  city: Medellín
+  phones: ["(604) 380 1790", "(604) 381 1790", "+57 300 276 1391"]
+  emails: ["museodelaguaepm@fundacionepm.org.co"]
+  metadata:
+    education_phones: ["(604) 380 3082", "+57 300 815 0898"]
+    tour_duration_minutes: 120
+    source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/
+
+- slug: biblioteca-epm
+  name: Biblioteca EPM
+  kind: biblioteca
+  address: "Carrera 54 No. 44-48, Plaza de Cisneros"
+  neighborhood: La Alpujarra
+  city: Medellín
+  phones: ["(604) 380 7516"]
+  emails: ["bibliotecaepm@epm.com.co"]
+  metadata:
+    specialization: "Ciencia, Industria, Medio Ambiente y Tecnología"
+    opened_on: "2005-06-02"
+    source_url: https://www.grupo-epm.com/que-hacemos/programas/biblioteca-epm/
+
+- slug: parque-de-los-deseos
+  name: Parque de los Deseos y Casa de la Música
+  kind: parque
+  address: "Calle 71 # 52-30"
+  neighborhood: Sevilla
+  city: Medellín
+  phones: ["(604) 516 6005", "+57 300 278 3221", "+57 300 548 5853"]
+  # El correo público NO se incluye: el único conocido es personal y está
+  # marcado como pendiente de confirmar en KB §5.5. Se usa el corporativo.
+  emails: []
+  metadata:
+    near_metro: "Estación Universidad"
+    source_url: https://www.grupo-epm.com/que-hacemos/programas/parque-de-los-deseos-y-casa-de-la-musica/
+
+# --- Las 14 UVA (KB §3.4) --------------------------------------------------
+# Los horarios de atención por UVA NO están publicados y NO se inventan
+# (KB §5.2): las venue_facts de horario se omiten para todas ellas.
+
+- slug: uva-la-armonia
+  name: UVA La Armonía
+  kind: uva
+  address: "Cra 36 # 84-98"
+  neighborhood: Santa Inés
+  city: Medellín
+  phones: ["+57 301 250 0814"]
+  metadata:
+    houses: "Museo de la Central Hidroeléctrica Piedras Blancas"
+
+- slug: uva-el-encanto
+  name: UVA El Encanto
+  kind: uva
+  address: "Cra 76 # 104D-01"
+  neighborhood: Santander
+  city: Medellín
+  phones: ["+57 300 610 1643"]
+
+- slug: uva-ilusion-verde
+  name: UVA Ilusión Verde
+  kind: uva
+  address: "Cl 3B Sur # 29B-56"
+  neighborhood: Los Naranjos
+  city: Medellín
+  phones: ["+57 301 262 0802"]
+
+- slug: uva-aguas-claras
+  name: UVA Aguas Claras
+  kind: uva
+  address: "Diagonal 50A AV 20-251"
+  neighborhood: Navarra
+  city: Bello
+  phones: ["+57 300 698 5313", "+57 304 216 1826"]
+
+- slug: uva-la-cordialidad
+  name: UVA La Cordialidad
+  kind: uva
+  address: "Cra 42B # 110A-04"
+  neighborhood: Santo Domingo Savio 1
+  city: Medellín
+  phones: ["+57 300 742 6086"]
+
+- slug: uva-la-alegria
+  name: UVA La Alegría
+  kind: uva
+  address: "Cra 41 # 79-66"
+  neighborhood: Santa Inés
+  city: Medellín
+  phones: ["+57 304 352 6729"]
+
+- slug: uva-la-esperanza
+  name: UVA La Esperanza
+  kind: uva
+  address: "Cl 96 # 34-100"
+  neighborhood: San Pablo
+  city: Medellín
+  phones: ["+57 300 546 6882"]
+
+- slug: uva-la-imaginacion
+  name: UVA La Imaginación
+  kind: uva
+  address: "Cra 40 # 61-04"
+  neighborhood: San Miguel
+  city: Medellín
+  phones: ["+57 301 249 8942"]
+
+- slug: uva-los-guayacanes
+  name: UVA Los Guayacanes
+  kind: uva
+  address: "Cl 65C # 94-04"
+  neighborhood: Cucaracho
+  city: Medellín
+  phones: ["+57 300 749 7082"]
+
+- slug: uva-mirador-de-san-cristobal
+  name: UVA Mirador de San Cristóbal
+  kind: uva
+  address: "Cra 131 # 66-20"
+  neighborhood: Corregimiento San Cristóbal
+  city: Medellín
+  phones: ["+57 301 681 6877"]
+
+- slug: uva-nuevo-amanecer
+  name: UVA Nuevo Amanecer
+  kind: uva
+  address: "Cl 107B # 23A-138"
+  neighborhood: La Avanzada
+  city: Medellín
+  phones: ["+57 304 351 2877"]
+
+- slug: uva-san-fernando
+  name: UVA San Fernando
+  kind: uva
+  address: "Cra 47 # 85-256"
+  neighborhood: San Fernando
+  city: Itagüí
+  phones: ["+57 301 247 6351"]
+
+- slug: uva-los-suenos
+  name: UVA Los Sueños
+  kind: uva
+  address: "Cra 28 # 69-04"
+  neighborhood: Versalles 1
+  city: Medellín
+  phones: ["+57 301 250 0814"]
+
+- slug: uva-la-libertad
+  name: UVA La Libertad
+  kind: uva
+  address: "Cl 57 # 17B-50"
+  neighborhood: La Libertad
+  city: Medellín
+  phones: ["+57 304 351 2880"]

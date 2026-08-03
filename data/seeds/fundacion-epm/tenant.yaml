@@ -1,0 +1,17 @@
+# Tenant piloto: Fundación Grupo EPM.
+# Fuente: KB_FUNDACION_EPM.md §2 — verificado 2026-08-03.
+slug: fundacion-epm
+name: Fundación Grupo EPM
+status: active
+settings:
+  timezone: America/Bogota
+  language: es-CO
+  # Datos corporativos, para el escalamiento y las respuestas de contacto.
+  corporate_phone: "+57 604 448 69 60"
+  corporate_email: contactenos@fundacionepm.org.co
+  offices: "Carrera 58 # 42-125, piso 3, Medellín"
+  office_hours: "Lunes a viernes, 7:30 a.m. – 5:30 p.m."
+  ethics_line: "01 8000 522 955"
+  pqrsdf_url: https://saia-fundacionepm.netsaia.com/ws/pqr/index.html
+  source_url: https://www.grupo-epm.com/fundacion-grupo-epm/
+  verified_at: "2026-08-03"

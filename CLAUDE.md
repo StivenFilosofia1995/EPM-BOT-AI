@@ -14,7 +14,7 @@
 | Tenant piloto | Fundación Grupo EPM — bot de programación cultural |
 | Caso de uso piloto | Responder por WhatsApp la programación mensual de Biblioteca EPM, Museo del Agua, Parque de los Deseos / Casa de la Música y las 14 UVA |
 | Motor de IA piloto | Claude (Anthropic) vía `AnthropicAdapter` |
-| Estado | `FASE 0 — bootstrap del monorepo completado (P0)`. Ver §11 |
+| Estado | `FASE 1 — dominio, base de datos y multitenancy completados (P1)`. Ver §11 |
 | Última actualización | 2026-08-03 |
 
 ---
@@ -122,18 +122,31 @@ templates(id, tenant_id, name, language, category, status, body)
 contacts(id, tenant_id, wa_id, profile_name, consent_at, opt_out_at)
 conversations(id, tenant_id, contact_id, channel_id, status, last_inbound_at, window_expires_at)
 messages(id, tenant_id, conversation_id, wamid, direction, type, payload, status, error)
-venues(id, tenant_id, slug, name, kind, address, phones, emails, geo, metadata)
-venue_facts(id, tenant_id, venue_id, key, value, valid_from, valid_to, source_id, confidence)
-activities(id, tenant_id, venue_id, title, description, starts_at, ends_at, recurrence,
-           audience, price, requires_registration, registration_url, status, source_id, confidence)
-activity_embeddings(activity_id, embedding vector(1024))
-sources(id, tenant_id, kind, url, cron, reliability, last_run_at)
-ingestion_runs(id, tenant_id, source_id, status, stats, started_at, finished_at, error)
-ai_traces(id, tenant_id, conversation_id, provider, model, tokens_in, tokens_out, latency_ms, cost)
+venues(id, tenant_id, slug, name, kind, address, neighborhood, city, phones, emails, geo, metadata)
+rooms(id, tenant_id, venue_id, name, normalized_name, capacity, aliases)
+venue_facts(id, tenant_id, venue_id, key, value, valid_from, valid_to, source_id,
+            source_url, verified_at, confidence)
+activities(id, tenant_id, venue_id, room_id, room_raw, title, normalized_title, description,
+           starts_at, ends_at, recurrence, activity_group_id,
+           audience, age_min, age_max, audience_raw,
+           price_amount, price_currency, requires_registration, registration_url,
+           status, source_id, source_url, source_row, evidence_snippet, extracted_at,
+           confidence, warnings, extra, published_at, published_by, deleted_at)
+activity_embeddings(activity_id, tenant_id, embedding vector(1024), model)
+sources(id, tenant_id, kind, name, url, cron, venue_id, is_active, last_run_at)
+ingestion_runs(id, tenant_id, source_id, status, started_at, finished_at,
+               rows_read, rows_imported, rows_warning, rows_error,
+               content_hash, stored_file_ref, error, stats)
+ai_traces(id, tenant_id, conversation_id, provider, model, tokens_in, tokens_out,
+          latency_ms, cost_estimate_usd, intent, guardrail_retries)
 audit_logs(id, tenant_id, actor_id, action, entity, entity_id, diff, created_at)
 ```
 
 `token_ref` es un puntero al secreto, **no** el token. Los tokens de Meta se cifran en reposo (envelope encryption); la clave vive en variable de entorno.
+
+**Dos identidades de conexión** (detalle en `docs/DATABASE.md` §2): el backend se conecta en runtime con el rol `epm_app`, que **no** omite RLS; las migraciones y el seed usan `postgres`, que sí lo omite y tiene DDL. Conectar el backend con `postgres` dejaría las políticas de RLS sin efecto.
+
+`rooms`, los campos de audiencia y precio desglosados, `activity_group_id`, `warnings`, `extra` y `deleted_at` provienen de `docs/CONTRATO_EXCEL_PROGRAMACION.md` y de los requisitos de P2B.
 
 ---
 
@@ -236,12 +249,13 @@ Toda variable nueva se agrega a `.env.example` **con comentario** en el mismo co
 - [x] Reglas de negocio del bot piloto
 - [x] Contrato de entrada del importador de Excel (ver `docs/CONTRATO_EXCEL_PROGRAMACION.md`)
 - [x] **Bootstrap del repositorio (P0)**: estructura del monorepo, backend FastAPI con `/health`, envoltura de errores y `Settings` tipadas, frontend Next.js + Tailwind + shadcn/ui, `docker-compose` con healthchecks, nginx con cabeceras de seguridad, CI (ruff, mypy --strict, pytest, pip-audit, npm audit, build de imágenes), test de arquitectura y documentación inicial. Sin lógica de negocio.
+- [x] **Dominio, base de datos y multitenancy (P1)**: value objects y entidades frozen sin ORM, 5 puertos ABC (ningún método de repositorio sin `tenant_id`, verificado por inspección de firmas), 16 tablas SQLAlchemy 2 async, migración inicial reversible con `pgvector`, rol de aplicación `epm_app` sin BYPASSRLS y RLS forzado en todas las tablas, `BaseTenantRepository`, `TenantContext` con `SET LOCAL` por transacción, y seed de la Fundación (17 espacios, 20 hechos) idempotente. 74 tests en verde, 8 de ellos de aislamiento contra Supabase real.
 
 **En curso**
-- [ ] Dominio, modelo de datos, migraciones iniciales + RLS (P1)
+- [ ] Pipeline de ingesta (Excel primario + HTML + PDF Issuu) — P2A
 
 **Siguiente**
-- [ ] Pipeline de ingesta (PDF Issuu + HTML + Excel)
+- [ ] Vista `/programacion` del panel (P2B)
 - [ ] Adapter de Anthropic y orquestador conversacional
 - [ ] Webhook de WhatsApp + Embedded Signup
 - [ ] Panel: revisión de extracciones, inbox, métricas

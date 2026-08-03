@@ -1,0 +1,161 @@
+# Hechos estables de cada espacio: horarios, tarifas, gratuidades, requisitos.
+# Fuente: KB_FUNDACION_EPM.md §3 — verificado 2026-08-03.
+#
+# REGLA DE ORO: todo dato lleva `source_url` y `verified_at`. Un dato sin
+# fuente no entra a la base.
+#
+# OMISIONES DELIBERADAS (KB §5 «Pendiente»). No se inventan:
+#   - Horario general de la Biblioteca EPM: solo se conoce el de préstamo y
+#     devolución, que es lo único que se carga aquí.
+#   - Horarios de atención de las 14 UVA: no publicados. Ninguna UVA tiene
+#     hechos de horario.
+#   - Calendario de cierres por festivos: la regla del Museo («primer día
+#     hábil de la semana») es ambigua cuando el lunes es festivo y requiere
+#     decisión explícita del negocio.
+#   - Correo público del Parque de los Deseos: el conocido es personal.
+
+# --- Museo del Agua EPM ----------------------------------------------------
+- venue_slug: museo-del-agua
+  key: horario_semana
+  value: "Martes a viernes desde las 8:30 a.m. Cierre de taquilla y último ingreso a las 3:30 p.m."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: horario_fin_de_semana
+  value: "Sábados, domingos y festivos desde las 9:30 a.m. Último ingreso a las 4:00 p.m."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: cierre_mantenimiento
+  value: "El primer día hábil de la semana no abre, por mantenimiento."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+  # Ambiguo cuando el lunes es festivo — pendiente de regla del negocio (KB §5.3).
+  confidence: 0.8
+
+- venue_slug: museo-del-agua
+  key: tarifa_residentes
+  value: "$8.000 COP para residentes en Colombia."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: tarifa_extranjeros
+  value: "$12.000 COP para visitantes extranjeros."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: gratuidades
+  value: >-
+    Ingreso gratuito para menores de 4 años, mayores de 60 años, instituciones
+    educativas oficiales de estratos 1, 2 y 3, y docentes con carné o carta
+    institucional.
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: beneficio_factura_epm
+  value: >-
+    Presentando factura de EPM original y vigente en taquilla (estratos 1, 2 y 3),
+    ingresan 3 personas gratis.
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: museo_para_todas_y_todos
+  value: "El último sábado de cada mes el ingreso es gratuito, hasta agotar aforo."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: aforo_y_reservas
+  value: >-
+    El ingreso es por grupos de máximo 16 personas cada 15 minutos. Los grupos
+    de más de 16 personas requieren reserva previa.
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/horarios-y-tarifas/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: duracion_recorrido
+  value: "El recorrido dura aproximadamente 2 horas."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: salas
+  value: >-
+    9 salas en 3 ejes: Evolución del planeta, Agua recurso vital, Ecosistemas,
+    Culturas forjadas por el agua, Abastecimiento de agua, Transformación del
+    ambiente, Derechos y distribución del recurso hídrico, Planeta azul y
+    Aula-Taller.
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/
+  verified_at: "2026-08-03"
+
+- venue_slug: museo-del-agua
+  key: programas
+  value: >-
+    Club de Amigos (8 a 12 años), semillero juvenil (14 a 26 años), Club de
+    Antaño (adultos mayores) y rutas pedagógicas para docentes.
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/museo-del-agua/
+  verified_at: "2026-08-03"
+
+# --- Biblioteca EPM --------------------------------------------------------
+# NOTA: el horario GENERAL de la sede no está publicado (KB §5.1). Solo se
+# carga el de préstamo y devolución, que es el único dato con fuente.
+- venue_slug: biblioteca-epm
+  key: horario_prestamo
+  value: "Préstamo y devolución: lunes a sábado, de 8:00 a.m. a 5:30 p.m."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/biblioteca-epm/
+  verified_at: "2026-08-03"
+
+- venue_slug: biblioteca-epm
+  key: entrada
+  value: "Entrada libre para todos los públicos."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/biblioteca-epm/
+  verified_at: "2026-08-03"
+
+- venue_slug: biblioteca-epm
+  key: especializacion
+  value: "Biblioteca especializada en Ciencia, Industria, Medio Ambiente y Tecnología."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/biblioteca-epm/
+  verified_at: "2026-08-03"
+
+# --- Parque de los Deseos y Casa de la Música ------------------------------
+- venue_slug: parque-de-los-deseos
+  key: horario_casa_de_la_musica
+  value: "Casa de la Música: martes a domingo, de 8:00 a.m. a 9:00 p.m., incluyendo festivos."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/parque-de-los-deseos-y-casa-de-la-musica/
+  verified_at: "2026-08-03"
+
+- venue_slug: parque-de-los-deseos
+  key: servicios
+  value: >-
+    Salas de ensayo gratuitas, recorridos guiados, talleres, conciertos y
+    exposiciones.
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/parque-de-los-deseos-y-casa-de-la-musica/
+  verified_at: "2026-08-03"
+
+- venue_slug: parque-de-los-deseos
+  key: lineas_programacion
+  value: >-
+    Cine Accesible (con audiodescripción y lengua de señas colombiana), MUROCK,
+    Medellín Music Lab, Feria de los Deseos, Mercados Sostenibles EPM y Huerta
+    de los Deseos (agroecología).
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/parque-de-los-deseos-y-casa-de-la-musica/
+  verified_at: "2026-08-03"
+
+- venue_slug: parque-de-los-deseos
+  key: como_llegar
+  value: "Está junto a la estación Universidad del Metro de Medellín."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/parque-de-los-deseos-y-casa-de-la-musica/
+  verified_at: "2026-08-03"
+
+# --- UVA La Armonía --------------------------------------------------------
+- venue_slug: uva-la-armonia
+  key: atractivo
+  value: "Alberga el Museo de la Central Hidroeléctrica Piedras Blancas."
+  source_url: https://www.grupo-epm.com/que-hacemos/programas/uva/
+  verified_at: "2026-08-03"

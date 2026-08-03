@@ -40,9 +40,23 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
 
     # --- Base de datos (Supabase Postgres) -----------------------------
+    #: Conexión de RUNTIME, con el rol de aplicación (`epm_app`), que NO omite
+    #: RLS. Es la que usa el backend para todas sus consultas.
     database_url: str
+    #: Conexión de MIGRACIONES, con un rol con privilegios de DDL (`postgres`).
+    #: Solo la usan Alembic y el seed. Si falta, se cae a `database_url`, lo
+    #: cual funciona en local pero no debe hacerse en producción.
+    database_migration_url: str | None = None
+    #: Contraseña del rol de aplicación. Solo la usa la migración inicial para
+    #: crear o actualizar `epm_app`; el backend nunca la lee en runtime (ya
+    #: viene embebida en `database_url`).
+    app_db_password: str | None = None
     database_pool_size: int = 10
     database_echo: bool = False
+
+    @property
+    def migration_url(self) -> str:
+        return self.database_migration_url or self.database_url
 
     # --- Supabase -------------------------------------------------------
     supabase_url: str | None = None
