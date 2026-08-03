@@ -41,4 +41,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -fsS http://127.0.0.1:8000/health || exit 1
 
-CMD ["uvicorn", "src.presentation.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Se respeta $PORT si el entorno lo define (Railway y la mayoría de PaaS
+# asignan uno dinámico y enrutan solo a ese puerto). Sin él, 8000, que es lo
+# que espera docker-compose y el healthcheck de arriba.
+CMD ["sh", "-c", "exec uvicorn src.presentation.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
