@@ -19,6 +19,10 @@ No responde todavía: redactar la respuesta necesita el motor de IA (P3). Recibe
 
 > ⚠️ Con la app de Meta **sin publicar**, solo llegan los webhooks de prueba disparados desde el panel. Los mensajes reales no se entregan aunque el webhook esté bien configurado.
 
+### Corregido
+
+- **`REDIS_URL` era obligatoria aunque nada usara Redis.** Un despliegue sin esa variable no arrancaba: `ValidationError` en el arranque, healthcheck en rojo y el servicio caído por una dependencia que no se estaba utilizando. Ahora es opcional. La regla que queda fijada, con un test que la protege: solo es obligatorio lo que el proceso necesita hoy; lo demás falla —con un mensaje claro— cuando alguien intenta usarlo.
+
 ### Añadido — P2B (primer corte): cargar la programación desde el navegador
 
 - **Botón para subir el Excel real.** `/programacion/importar`: selector de espacio y mes, zona de arrastrar y soltar, y **vista previa fila por fila antes de guardar nada** — semáforo por fila, motivo de cada advertencia en español y el texto literal de las celdas junto a lo interpretado. La confirmación persiste como `draft`; publicar sigue siendo un acto humano aparte (ADR 005).
