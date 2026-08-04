@@ -4,6 +4,8 @@
         --file ./parrilla.xlsx --venue biblioteca-epm --month 2026-07
 
     python -m src.cli seed --tenant fundacion-epm
+
+    python -m src.cli register-channel --tenant fundacion-epm
 """
 
 import argparse
@@ -12,6 +14,7 @@ import sys
 from pathlib import Path
 
 from src.application.ingestion.import_excel import import_excel
+from src.infrastructure.database.register_channel import register_channel
 from src.infrastructure.database.seed import load_seed
 
 
@@ -55,12 +58,35 @@ def _build_parser() -> argparse.ArgumentParser:
     seed = sub.add_parser("seed", help="Carga el seed de un tenant")
     seed.add_argument("--tenant", default="fundacion-epm")
 
+    channel = sub.add_parser(
+        "register-channel",
+        help="Asocia un número de WhatsApp a un tenant (lo exige el webhook)",
+    )
+    channel.add_argument("--tenant", default="fundacion-epm")
+    channel.add_argument(
+        "--phone-number-id", help="Por omisión, META_PHONE_NUMBER_ID"
+    )
+    channel.add_argument("--waba-id", help="Por omisión, META_WABA_ID")
+    channel.add_argument(
+        "--display-number", default="", help="Número visible, solo informativo"
+    )
+
     return parser
 
 
 async def _run(args: argparse.Namespace) -> int:
     if args.command == "seed":
         print((await load_seed(args.tenant)).render())  # noqa: T201
+        return 0
+
+    if args.command == "register-channel":
+        registration = await register_channel(
+            tenant_slug=args.tenant,
+            phone_number_id=args.phone_number_id,
+            waba_id=args.waba_id,
+            display_number=args.display_number,
+        )
+        print(registration.render())  # noqa: T201
         return 0
 
     year, month = _parse_month(args.month)

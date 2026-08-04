@@ -65,8 +65,21 @@ class Settings(BaseSettings):
 
     # --- Meta / WhatsApp Cloud API ---------------------------------------
     meta_app_id: str | None = None
+    #: Secreto de la app. Con él se verifica la firma HMAC SHA-256 de cada
+    #: webhook. Sin él no se puede distinguir a Meta de cualquier otro que
+    #: conozca la URL, así que el webhook se apaga.
     meta_app_secret: str | None = None
+    #: Contraseña que inventamos nosotros y que Meta nos devuelve en el GET de
+    #: verificación. No es un token de acceso de Meta.
     meta_verify_token: str | None = None
+    #: Identificador del número emisor. No es el número: es lo que Meta manda
+    #: en el webhook y lo que permite saber a qué tenant pertenece el mensaje.
+    meta_phone_number_id: str | None = None
+    meta_waba_id: str | None = None
+    #: Token con el que llamamos a la Graph API para enviar. El de la pantalla
+    #: de configuración caduca en 24 h; el de producción es de usuario del
+    #: sistema y va cifrado en reposo.
+    meta_access_token: str | None = None
     meta_graph_api_version: str = "v21.0"
 
     # --- Proveedores de IA ------------------------------------------------

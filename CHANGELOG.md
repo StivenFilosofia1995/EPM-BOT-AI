@@ -5,6 +5,20 @@ Versionado semántico. Commits en [Conventional Commits](https://www.conventiona
 
 ## [No publicado]
 
+### Añadido — P4 (primer corte): webhook de WhatsApp
+
+- **`GET /api/v1/webhooks/whatsapp`** — apretón de manos de Meta. Devuelve el `hub.challenge` en **texto plano**; envuelto en JSON, Meta no lo reconoce y la verificación falla. Sin `META_VERIFY_TOKEN` configurado responde 503, y con token equivocado 403 sin detalle.
+- **`POST /api/v1/webhooks/whatsapp`** — verificación HMAC SHA-256 de `X-Hub-Signature-256` sobre el **cuerpo crudo**, con comparación en tiempo constante. Firma inválida ⇒ 403; todo lo demás ⇒ **200 siempre**, porque Meta desactiva la suscripción tras varios fallos y un error nuestro no puede costar el canal.
+- **Persistencia del entrante**: contacto (alta o refresco del nombre de perfil), conversación abierta reutilizada o nueva, y mensaje. **Idempotente por `wamid`** — Meta reintenta, y un duplicado provocaría una segunda respuesta al usuario cuando exista el bot.
+- **Resolución del tenant por `phone_number_id`** contra `whatsapp_accounts`, como exige CLAUDE.md §1.6. Si el número no está registrado no se guarda nada y se registra el error.
+- **`python -m src.cli register-channel`** — asocia un número a un tenant. Sin esa fila el webhook no puede atribuir los mensajes.
+- `Settings` gana `meta_phone_number_id`, `meta_waba_id` y `meta_access_token`.
+- **22 tests** (218 en total): challenge en texto plano, token y modo equivocados, cinco formas de firma inválida, firma de otro secreto, cuerpo alterado, error al guardar que aun así responde 200, `phone_number_id` desconocido que no guarda nada, acuses de entrega, cuerpo ilegible, y la lectura del sobre anidado de Meta.
+
+No responde todavía: redactar la respuesta necesita el motor de IA (P3). Recibe y guarda.
+
+> ⚠️ Con la app de Meta **sin publicar**, solo llegan los webhooks de prueba disparados desde el panel. Los mensajes reales no se entregan aunque el webhook esté bien configurado.
+
 ### Añadido — P2B (primer corte): cargar la programación desde el navegador
 
 - **Botón para subir el Excel real.** `/programacion/importar`: selector de espacio y mes, zona de arrastrar y soltar, y **vista previa fila por fila antes de guardar nada** — semáforo por fila, motivo de cada advertencia en español y el texto literal de las celdas junto a lo interpretado. La confirmación persiste como `draft`; publicar sigue siendo un acto humano aparte (ADR 005).
