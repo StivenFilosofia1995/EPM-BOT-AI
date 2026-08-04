@@ -5,6 +5,12 @@ Versionado semántico. Commits en [Conventional Commits](https://www.conventiona
 
 ## [No publicado]
 
+### Añadido — páginas públicas de privacidad y eliminación de datos
+
+- **`GET /privacidad`** y **`GET /eliminar-datos`** — páginas HTML públicas, fuera de `/api/v1` a propósito (no son parte del contrato de API versionado), para completar el alta de la app de WhatsApp Business en Meta, que exige ambas URLs antes de configurar el webhook de producción.
+- **Contenido en borrador**, señalado como tal en la propia página: la Fundación todavía no ha designado un responsable del tratamiento de datos (§11, checklist de `docs/SECURITY.md`). El texto usa solo los datos ya verificados del certificado de Cámara de Comercio (razón social, NIT) y debe confirmarlo esa persona antes de tratarse como definitivo.
+- 2 tests nuevos: ambas rutas responden 200 con `text/html` y contienen el texto esperado.
+
 ### Añadido — P4 (primer corte): webhook de WhatsApp
 
 - **`GET /api/v1/webhooks/whatsapp`** — apretón de manos de Meta. Devuelve el `hub.challenge` en **texto plano**; envuelto en JSON, Meta no lo reconoce y la verificación falla. Sin `META_VERIFY_TOKEN` configurado responde 503, y con token equivocado 403 sin detalle.
