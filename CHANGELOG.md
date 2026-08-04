@@ -5,6 +5,27 @@ Versionado semántico. Commits en [Conventional Commits](https://www.conventiona
 
 ## [No publicado]
 
+### Añadido — P2A (primera mitad): importador de Excel
+
+- **Parsers deterministas** del formato de la Fundación, uno por trampa del contrato: detección de encabezados por contenido (no por posición ni por nombre de hoja), fechas en español (listas, «Todos los martes de julio», rangos que cruzan de mes), horarios (**`12:00 m.` es mediodía, no medianoche**), público con rango de edad, tabla de decisión de inscripción y resolución de salas contra catálogo. No pasan por el LLM (ADR 009).
+- **`XlsxProgramacionSource`** — produce un resultado por fila; un error de fila nunca aborta el archivo.
+- **`import_excel`** — persiste como `draft` y registra la corrida en `ingestion_runs` con el hash del contenido. Idempotente por dos vías: no reprocesa contenido idéntico, y con `--force` actualiza en vez de duplicar. Las actividades ya publicadas no se tocan.
+- **CLI** `python -m src.cli ingest` y `python -m src.cli seed`.
+- **Catálogo de salas** de Biblioteca EPM en el seed. Sin él, el importador no puede resolver el campo `Lugar`.
+- **94 tests nuevos** (168 en total) con los valores observados del archivo real. Criterio de aceptación verificado: **23 filas → 50 actividades en draft, 0 errores**.
+- **`docs/INGESTION.md`** con el flujo, las trampas del formato y qué hacer cuando el Excel cambia.
+
+### Cambiado
+
+- **`docs/CONTRATO_EXCEL_PROGRAMACION.md` §7** — añadida la fila que faltaba en la tabla de decisión: cuando la columna de enlace trae texto que no es una URL (caso real: `No disponible por cúpos completados`), `registration_url` y `requires_registration` quedan nulos, el texto se conserva en `extra` y la fila se marca con `registro_no_es_url`. La tabla original asumía que un valor presente era siempre un enlace válido.
+- `Settings` gana `database_migration_url` y `app_db_password`; se declaran `openpyxl`, `tzdata`, `types-openpyxl`.
+
+### Corregido
+
+- **`zoneinfo` fallaba en Windows** por falta de la base de datos de zonas horarias del sistema: `America/Bogota` funcionaba en Linux (CI y Docker) y reventaba en la máquina de desarrollo. Se declara `tzdata` para que el comportamiento sea idéntico en todas partes.
+- La advertencia `out_of_month` se marcaba en todas las actividades de una fila cuando solo algunas caían fuera del mes. Ahora es por actividad: de las 6 fechas de «Del 23 de junio al 9 de julio», solo las 3 de junio la llevan.
+- El importador hacía E/S bloqueante (leer el archivo, calcular el hash, parsear con openpyxl) dentro de una función `async`. Con la CLI daba igual, pero al llamarlo desde un endpoint HTTP en P2B habría bloqueado el servidor entero durante la carga. Va en un hilo aparte.
+
 ### Añadido — P1: dominio, base de datos y multitenancy
 
 - **`domain/`**: value objects frozen (`TenantId`, `WaId` con validación E.164 y enmascarado para logs, `Wamid`, `ConversationWindow.is_open()` para la ventana de 24 h, `Money` en centavos, `DateRange`, `Audience`, `Confidence`), 12 entidades sin ORM y 5 puertos ABC (`MessagingPort`, `AIProviderPort`, `KnowledgeRetrieverPort`, `ConversationRepositoryPort`, `IngestionSourcePort`).

@@ -115,8 +115,24 @@ Valores observados en `Inscripción`: `No requiere inscripción` o **vacío**. E
 | vacío | presente | `true` |
 | vacío | vacío | `null` → **requiere resolución humana**, no se asume nada |
 | `Requiere inscripción` / `Con inscripción` / `Cupo limitado` | cualquiera | `true` |
+| vacío | **texto que no es una URL** | `null` + advertencia `registro_no_es_url` |
 
 La URL se valida (esquema http/https, host resoluble sintácticamente) pero **no se acorta ni se reescribe**.
+
+### El enlace que no es un enlace
+
+La última fila de la tabla se añadió tras encontrar el caso en el archivo real de julio de 2026: la fila «Semillero de robótica intensivo» trae en `Enlace de inscripción` el texto **`No disponible por cúpos completados`**.
+
+La tabla original decía «vacío + presente ⇒ `true`», pero asumía que lo presente era un enlace válido. Aplicarla literalmente habría guardado prosa en un campo de URL y habría afirmado que la actividad admite inscripción cuando el texto dice justo lo contrario.
+
+Comportamiento definido:
+
+- `registration_url` → `null`. **Nunca prosa en un campo de URL.**
+- `requires_registration` → `null`, sin resolver.
+- El texto original se conserva en `extra.registration_note`; no se descarta.
+- Advertencia `registro_no_es_url` y la fila queda marcada para revisión humana.
+
+Es coherente con la regla general del §7: ante la duda, no se asume nada.
 
 ---
 

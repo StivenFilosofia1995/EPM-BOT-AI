@@ -1,0 +1,36 @@
+# Catálogo de salas por espacio (contrato §5).
+#
+# Fuente: valores observados en el archivo real
+# `Programacion_Formativa Biblioteca_Julio_2026.xlsx`, recogidos en el §5 del
+# contrato. No son inventadas: son las salas que la Fundación usa en su
+# programación.
+#
+# `normalized_name` es el nombre en minúsculas y sin tildes; es contra lo que
+# el importador hace la coincidencia. Se escribe explícito en vez de derivarlo
+# para que quede a la vista qué se está comparando.
+#
+# OJO CON LOS NÚMEROS: «Sala de formación», «Sala de Formación 3» y
+# «Sala de formación 4» son TRES salas distintas. El número es significativo
+# y la coincidencia difusa está expresamente impedida de fundirlas.
+#
+# Una sala que aparezca en un Excel futuro y no esté aquí NO se crea sola:
+# queda en `room_raw` con advertencia y la resuelve una persona en el panel.
+
+biblioteca-epm:
+  - name: Taller Infantil
+    normalized_name: taller infantil
+
+  - name: Sala de formación
+    normalized_name: sala de formacion
+
+  - name: Sala de Formación 3
+    normalized_name: sala de formacion 3
+
+  - name: Sala de formación 4
+    normalized_name: sala de formacion 4
+
+  - name: Sala de Investigadores
+    normalized_name: sala de investigadores
+
+  - name: Cafetería
+    normalized_name: cafeteria

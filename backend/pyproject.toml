@@ -18,6 +18,11 @@ dependencies = [
     "structlog>=24.4,<25.0",
     "redis>=5.2,<6.0",
     "pyyaml>=6.0,<7.0",
+    "openpyxl>=3.1,<4.0",
+    # `zoneinfo` usa la base de datos de zonas del sistema, que Windows no
+    # trae: sin esto, America/Bogota falla en Windows y funciona en Linux.
+    # Declararlo hace que el comportamiento sea idéntico en todas partes.
+    "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]
@@ -32,6 +37,7 @@ dev = [
     # instalarlos solo en la máquina de quien programa hace que CI rompa
     # aunque en local pase todo.
     "types-PyYAML>=6.0,<7.0",
+    "types-openpyxl>=3.1,<4.0",
 ]
 
 [build-system]

@@ -33,12 +33,15 @@ class SeedReport:
     venues_updated: int
     facts_inserted: int
     facts_updated: int
+    rooms_inserted: int = 0
+    rooms_updated: int = 0
 
     def render(self) -> str:
         estado = "creado" if self.tenant_created else "ya existía"
         return (
             f"Tenant '{self.tenant_slug}': {estado}\n"
             f"  espacios: {self.venues_inserted} nuevos, {self.venues_updated} actualizados\n"
+            f"  salas:    {self.rooms_inserted} nuevas, {self.rooms_updated} actualizadas\n"
             f"  hechos:   {self.facts_inserted} nuevos, {self.facts_updated} actualizados"
         )
 
@@ -145,6 +148,56 @@ async def _seed_venues(
     return inserted, updated
 
 
+async def _seed_rooms(
+    conn: AsyncConnection, tenant_id: str, rooms_by_venue: dict[str, list[dict[str, Any]]]
+) -> tuple[int, int]:
+    """Catálogo de salas por espacio (contrato §5).
+
+    Sin catálogo el importador de Excel no puede resolver el campo `Lugar` y
+    deja todas las filas con la sala sin resolver.
+    """
+    inserted = updated = 0
+    for venue_slug, rooms in rooms_by_venue.items():
+        venue_id = await conn.scalar(
+            text("SELECT id FROM venues WHERE tenant_id = :tenant_id AND slug = :slug"),
+            {"tenant_id": tenant_id, "slug": venue_slug},
+        )
+        if venue_id is None:
+            raise ValueError(f"rooms.yaml referencia el espacio '{venue_slug}', que no existe")
+
+        for room in rooms:
+            params = {
+                "tenant_id": tenant_id,
+                "venue_id": venue_id,
+                "name": room["name"],
+                "normalized_name": room["normalized_name"],
+                "capacity": room.get("capacity"),
+            }
+            existing = await conn.scalar(
+                text(
+                    "SELECT id FROM rooms WHERE tenant_id = :tenant_id"
+                    " AND venue_id = :venue_id AND normalized_name = :normalized_name"
+                ),
+                params,
+            )
+            if existing is None:
+                await conn.execute(
+                    text(
+                        "INSERT INTO rooms (tenant_id, venue_id, name, normalized_name, capacity)"
+                        " VALUES (:tenant_id, :venue_id, :name, :normalized_name, :capacity)"
+                    ),
+                    params,
+                )
+                inserted += 1
+            else:
+                await conn.execute(
+                    text("UPDATE rooms SET name = :name, capacity = :capacity WHERE id = :id"),
+                    {**params, "id": existing},
+                )
+                updated += 1
+    return inserted, updated
+
+
 async def _seed_facts(
     conn: AsyncConnection, tenant_id: str, facts: list[dict[str, Any]]
 ) -> tuple[int, int]:
@@ -206,12 +259,15 @@ async def load_seed(tenant_slug: str) -> SeedReport:
     tenant_data = _load_yaml(seed_dir / "tenant.yaml")
     venues = _load_yaml(seed_dir / "venues.yaml") or []
     facts = _load_yaml(seed_dir / "venue_facts.yaml") or []
+    rooms_path = seed_dir / "rooms.yaml"
+    rooms = _load_yaml(rooms_path) if rooms_path.exists() else {}
 
     engine = create_async_engine(get_settings().migration_url)
     try:
         async with engine.begin() as conn:
             tenant_id, created = await _seed_tenant(conn, tenant_data)
             v_ins, v_upd = await _seed_venues(conn, tenant_id, venues)
+            r_ins, r_upd = await _seed_rooms(conn, tenant_id, rooms or {})
             f_ins, f_upd = await _seed_facts(conn, tenant_id, facts)
     finally:
         await engine.dispose()
@@ -221,6 +277,8 @@ async def load_seed(tenant_slug: str) -> SeedReport:
         tenant_created=created,
         venues_inserted=v_ins,
         venues_updated=v_upd,
+        rooms_inserted=r_ins,
+        rooms_updated=r_upd,
         facts_inserted=f_ins,
         facts_updated=f_upd,
     )

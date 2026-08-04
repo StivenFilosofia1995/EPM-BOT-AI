@@ -251,8 +251,10 @@ Toda variable nueva se agrega a `.env.example` **con comentario** en el mismo co
 - [x] **Bootstrap del repositorio (P0)**: estructura del monorepo, backend FastAPI con `/health`, envoltura de errores y `Settings` tipadas, frontend Next.js + Tailwind + shadcn/ui, `docker-compose` con healthchecks, nginx con cabeceras de seguridad, CI (ruff, mypy --strict, pytest, pip-audit, npm audit, build de imágenes), test de arquitectura y documentación inicial. Sin lógica de negocio.
 - [x] **Dominio, base de datos y multitenancy (P1)**: value objects y entidades frozen sin ORM, 5 puertos ABC (ningún método de repositorio sin `tenant_id`, verificado por inspección de firmas), 16 tablas SQLAlchemy 2 async, migración inicial reversible con `pgvector`, rol de aplicación `epm_app` sin BYPASSRLS y RLS forzado en todas las tablas, `BaseTenantRepository`, `TenantContext` con `SET LOCAL` por transacción, y seed de la Fundación (17 espacios, 20 hechos) idempotente. 74 tests en verde, 8 de ellos de aislamiento contra Supabase real.
 
+- [x] **Importador de Excel (primera mitad de P2A)**: parsers deterministas de encabezados, fechas en español, horarios, público, inscripción y salas; `XlsxProgramacionSource`; caso de uso que persiste como `draft` con registro en `ingestion_runs`; CLI `python -m src.cli ingest`; catálogo de salas en el seed. Verificado contra el archivo real: 23 filas → 50 actividades, 0 errores. 168 tests en verde. Ver `docs/INGESTION.md`.
+
 **En curso**
-- [ ] Pipeline de ingesta (Excel primario + HTML + PDF Issuu) — P2A
+- [ ] Fuentes de respaldo de P2A: HTML, PDF de Issuu y páginas de espacio, con el estructurador por LLM
 
 **Siguiente**
 - [ ] Vista `/programacion` del panel (P2B)
