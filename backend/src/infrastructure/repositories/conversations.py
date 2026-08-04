@@ -71,6 +71,18 @@ class SqlAlchemyConversationRepository(BaseTenantRepository, ConversationReposit
         row = (await self._session.execute(stmt)).scalar_one_or_none()
         return self._to_contact(row) if row else None
 
+    async def mark_privacy_notice_sent(
+        self, tenant_id: TenantId, contact_id: UUID, *, occurred_at: datetime
+    ) -> None:
+        self._check(tenant_id)
+        await self._session.execute(
+            update(ContactModel)
+            .where(ContactModel.tenant_id == self._tenant_id.value)
+            .where(ContactModel.id == contact_id)
+            .where(ContactModel.consent_at.is_(None))
+            .values(consent_at=occurred_at)
+        )
+
     # --- conversaciones ---------------------------------------------------
 
     async def get_or_create_conversation(

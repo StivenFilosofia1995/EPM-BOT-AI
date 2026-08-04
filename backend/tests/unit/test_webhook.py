@@ -254,6 +254,96 @@ def test_the_webhook_is_disabled_without_an_app_secret(
     assert response.status_code == 503
 
 
+# --- Enganche con la respuesta (P4, segundo corte) ---------------------------
+
+
+def test_a_new_text_message_triggers_a_response(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    responded: list[str] = []
+
+    async def fake_resolve(pid: str) -> tuple[Any, Any]:
+        import uuid  # noqa: PLC0415
+
+        from src.domain.value_objects import TenantId  # noqa: PLC0415
+
+        return TenantId(uuid.uuid4()), uuid.uuid4()
+
+    async def fake_store(**_kwargs: Any) -> bool:
+        return True
+
+    async def fake_respond(*, message_text: str, **_kwargs: Any) -> None:
+        responded.append(message_text)
+
+    monkeypatch.setattr(webhooks, "_resolve_channel", fake_resolve)
+    monkeypatch.setattr(webhooks, "store_inbound_message", fake_store)
+    monkeypatch.setattr(webhooks, "_respond", fake_respond)
+
+    body = json.dumps(_payload(text="¿Qué hay este sábado?")).encode()
+    response = client.post(URL, content=body, headers={"X-Hub-Signature-256": _sign(body)})
+
+    assert response.status_code == 200
+    assert responded == ["¿Qué hay este sábado?"]
+
+
+def test_a_duplicate_message_does_not_trigger_a_response(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Un reintento de Meta de un mensaje ya guardado no debe generar una
+    segunda respuesta (CLAUDE.md §3.4)."""
+    responded: list[str] = []
+
+    async def fake_resolve(pid: str) -> tuple[Any, Any]:
+        import uuid  # noqa: PLC0415
+
+        from src.domain.value_objects import TenantId  # noqa: PLC0415
+
+        return TenantId(uuid.uuid4()), uuid.uuid4()
+
+    async def fake_store(**_kwargs: Any) -> bool:
+        return False  # ya existía
+
+    async def fake_respond(**_kwargs: Any) -> None:
+        responded.append("no debería llamarse")
+
+    monkeypatch.setattr(webhooks, "_resolve_channel", fake_resolve)
+    monkeypatch.setattr(webhooks, "store_inbound_message", fake_store)
+    monkeypatch.setattr(webhooks, "_respond", fake_respond)
+
+    body = json.dumps(_payload()).encode()
+    response = client.post(URL, content=body, headers={"X-Hub-Signature-256": _sign(body)})
+
+    assert response.status_code == 200
+    assert responded == []
+
+
+def test_a_failure_while_responding_still_answers_200(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Sin credenciales de IA o de Meta configuradas, `_respond` no debe
+    tumbar la recepción del webhook."""
+
+    async def fake_resolve(pid: str) -> tuple[Any, Any]:
+        import uuid  # noqa: PLC0415
+
+        from src.domain.value_objects import TenantId  # noqa: PLC0415
+
+        return TenantId(uuid.uuid4()), uuid.uuid4()
+
+    async def fake_store(**_kwargs: Any) -> bool:
+        return True
+
+    monkeypatch.setattr(webhooks, "_resolve_channel", fake_resolve)
+    monkeypatch.setattr(webhooks, "store_inbound_message", fake_store)
+    # `_respond` real, sin monkeypatchear: sin ANTHROPIC_API_KEY/META_ACCESS_TOKEN
+    # configurados en el entorno de test, construir los adaptadores falla.
+
+    body = json.dumps(_payload()).encode()
+    response = client.post(URL, content=body, headers={"X-Hub-Signature-256": _sign(body)})
+
+    assert response.status_code == 200
+
+
 # --- Robustez: nunca un 5xx a Meta --------------------------------------------
 
 

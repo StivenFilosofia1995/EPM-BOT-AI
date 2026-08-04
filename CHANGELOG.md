@@ -5,6 +5,21 @@ Versionado semántico. Commits en [Conventional Commits](https://www.conventiona
 
 ## [No publicado]
 
+### Añadido — P3 (primer corte): el bot ya redacta y responde
+
+- **`AnthropicAdapter`** (`infrastructure/ai/`): primera implementación de `AIProviderPort`. `complete` y `complete_with_vision` contra la API de Claude, con `AIUsage` (tokens, latencia, modelo) para alimentar `ai_traces` más adelante.
+- **`MetaMessagingAdapter`** (`infrastructure/meta/`): primera implementación de `MessagingPort`. `send_text`, `send_template`, `send_interactive` y `mark_as_read` contra la Graph API de WhatsApp Cloud.
+- **`SqlKnowledgeRetriever`** (`infrastructure/knowledge/`): primera implementación de `KnowledgeRetrieverPort`, solo con filtro SQL estructurado (tenant, espacio, fechas, audiencia, texto). **El re-ranking semántico con `pgvector` (ADR 006) queda pendiente**: no hay todavía pipeline que puebla `activity_embeddings`. Mientras tanto, el filtro SQL ya garantiza que el bot solo ve actividades `published`, nunca inventa.
+- **`respond_to_inbound_message`** (`application/messaging/`): el orquestador que faltaba. Recupera actividades, arma el prompt con las reglas de CLAUDE.md §7 (persona, qué puede y no puede decir, formato de máximo 600 caracteres), le pide a la IA que redacte **solo con ese contexto**, y manda la respuesta. Aviso de privacidad en el primer contacto de cada persona (con `consent_at`, que hasta ahora no se escribía en ningún lado). Escalamiento a humano por palabra clave (queja, PQRSDF, "hablar con un asesor") — todavía sin clasificación real de intención.
+- Conectado al webhook: un mensaje de texto nuevo (no duplicado) dispara la respuesta; una IA o un Meta sin credenciales configuradas se registra y no tumba la recepción (mismo principio de siempre: nunca un 5xx a Meta).
+- `ConversationRepositoryPort` gana `mark_privacy_notice_sent`.
+- `ANTHROPIC_MODEL` nueva variable de entorno (`claude-sonnet-5` por defecto). Se agrega la dependencia `anthropic`.
+- Tests nuevos: piezas puras del orquestador (detección de escalamiento, reconstrucción del historial, formato del contexto), validación de credenciales de ambos adaptadores, y el enganche del webhook (mensaje nuevo dispara respuesta, duplicado no, fallo del adaptador no rompe el 200).
+
+**Simplificaciones deliberadas de este primer corte**, documentadas en el propio código: sin re-ranking semántico todavía, sin clasificación de intención (se le pasa el texto crudo del usuario al filtro), sin cola/worker (se responde en la misma petición del webhook, no en Redis todavía).
+
+> ⚠️ No se pudo correr `ruff` / `mypy --strict` / `pytest` en la máquina donde se escribió: pide Python 3.13 y solo había otras versiones instaladas. Queda a criterio de CI.
+
 ### Añadido — páginas públicas de privacidad y eliminación de datos
 
 - **`GET /privacidad`** y **`GET /eliminar-datos`** — páginas HTML públicas, fuera de `/api/v1` a propósito (no son parte del contrato de API versionado), para completar el alta de la app de WhatsApp Business en Meta, que exige ambas URLs antes de configurar el webhook de producción.
