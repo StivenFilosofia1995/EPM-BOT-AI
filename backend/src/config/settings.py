@@ -102,7 +102,15 @@ class Settings(BaseSettings):
     default_tenant_slug: str = "fundacion-epm"
 
     # --- Redis --------------------------------------------------------------
-    redis_url: str
+    #: Opcional a propósito. Todavía nada usa Redis: la cola del webhook y el
+    #: rate limiting llegan más adelante. Exigirla hacía que un despliegue sin
+    #: esta variable no arrancara, con un fallo de validación en el arranque
+    #: que no dice nada al operador — y el servicio caído por una dependencia
+    #: que ni siquiera se estaba usando.
+    #:
+    #: Cuando entre la cola, quien la use debe fallar con un mensaje claro si
+    #: falta, no dejar el sistema arrancar y encolar en el vacío.
+    redis_url: str | None = None
 
     # --- Infraestructura ------------------------------------------------------
     backend_port: int = 8000

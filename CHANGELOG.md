@@ -5,6 +5,11 @@ Versionado semántico. Commits en [Conventional Commits](https://www.conventiona
 
 ## [No publicado]
 
+### Corregido
+
+- **Restaurado `REDIS_URL` como opcional.** El commit de P3 la volvió obligatoria otra vez, deshaciendo sin querer el arreglo de `c82747a`: se construyó el commit desde una copia local desactualizada del repositorio, y ese archivo viejo pisó la corrección. Los tres tests de `test_settings_minimal.py` que fallaron en CI son justamente los que protegen esa regla — detectaron la regresión antes de que causara daño. El despliegue no se cayó solo porque Railway ya tenía la variable puesta.
+  - **Regla de trabajo que queda fijada:** antes de construir un commit, comparar contra `origin/main` archivo por archivo. Un `git add` de un archivo que no se tocó en la tarea puede revertir trabajo ajeno sin que nada lo advierta.
+
 ### Añadido — P3 (primer corte): el bot ya redacta y responde
 
 - **`AnthropicAdapter`** (`infrastructure/ai/`): primera implementación de `AIProviderPort`. `complete` y `complete_with_vision` contra la API de Claude, con `AIUsage` (tokens, latencia, modelo) para alimentar `ai_traces` más adelante.
