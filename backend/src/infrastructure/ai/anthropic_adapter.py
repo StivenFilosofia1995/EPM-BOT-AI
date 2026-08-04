@@ -60,9 +60,9 @@ class AnthropicAdapter(AIProviderPort):
         response = await self._client.messages.create(
             model=self._model,
             max_tokens=max_tokens,
-            system=system or anthropic.NOT_GIVEN,
-            messages=_to_anthropic_messages(messages),
-            tools=tools or anthropic.NOT_GIVEN,
+            system=system or anthropic.NOT_GIVEN,  # type: ignore[arg-type]
+            messages=_to_anthropic_messages(messages),  # type: ignore[arg-type]
+            tools=tools or anthropic.NOT_GIVEN,  # type: ignore[arg-type]
         )
         latency_ms = round((time.perf_counter() - start) * 1000)
 
@@ -127,8 +127,8 @@ class AnthropicAdapter(AIProviderPort):
         response = await self._client.messages.create(
             model=self._model,
             max_tokens=max_tokens,
-            system=system or anthropic.NOT_GIVEN,
-            messages=text_messages,
+            system=system or anthropic.NOT_GIVEN,  # type: ignore[arg-type]
+            messages=text_messages,  # type: ignore[arg-type]
         )
         latency_ms = round((time.perf_counter() - start) * 1000)
         text = "".join(block.text for block in response.content if block.type == "text")
