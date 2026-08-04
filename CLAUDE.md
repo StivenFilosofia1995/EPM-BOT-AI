@@ -14,8 +14,8 @@
 | Tenant piloto | Fundación Grupo EPM — bot de programación cultural |
 | Caso de uso piloto | Responder por WhatsApp la programación mensual de Biblioteca EPM, Museo del Agua, Parque de los Deseos / Casa de la Música y las 14 UVA |
 | Motor de IA piloto | Claude (Anthropic) vía `AnthropicAdapter` |
-| Estado | `FASE 1 — dominio, base de datos y multitenancy completados (P1)`. Ver §11 |
-| Última actualización | 2026-08-03 |
+| Estado | `FASE 2 — ingesta de Excel operativa desde el panel (P2A parcial + P2B primer corte)`. Ver §11 |
+| Última actualización | 2026-08-04 |
 
 ---
 
@@ -253,14 +253,19 @@ Toda variable nueva se agrega a `.env.example` **con comentario** en el mismo co
 
 - [x] **Importador de Excel (primera mitad de P2A)**: parsers deterministas de encabezados, fechas en español, horarios, público, inscripción y salas; `XlsxProgramacionSource`; caso de uso que persiste como `draft` con registro en `ingestion_runs`; CLI `python -m src.cli ingest`; catálogo de salas en el seed. Verificado contra el archivo real: 23 filas → 50 actividades, 0 errores. 168 tests en verde. Ver `docs/INGESTION.md`.
 
+- [x] **Carga desde el navegador (primer corte de P2B)**: `/programacion/importar` con vista previa fila por fila antes de guardar (semáforo, advertencias en español, texto literal de las celdas junto a lo interpretado) y `/programacion` con filtros; API `GET /venues`, `GET /activities`, `POST /programacion/import/preview` (no escribe) y `POST /programacion/import` (persiste como `draft`); guarda `X-Admin-Token` **temporal** y proxy de Next que mantiene el token fuera del navegador. 196 tests en verde. Ver `docs/API.md`.
+
 **En curso**
-- [ ] Fuentes de respaldo de P2A: HTML, PDF de Issuu y páginas de espacio, con el estructurador por LLM
+- [ ] Cola de revisión y publicación por lote: los 50 borradores siguen en `draft` y no hay pantalla para publicarlos
 
 **Siguiente**
-- [ ] Vista `/programacion` del panel (P2B)
+- [ ] Fuentes de respaldo de P2A: HTML, PDF de Issuu y páginas de espacio, con el estructurador por LLM
 - [ ] Adapter de Anthropic y orquestador conversacional
 - [ ] Webhook de WhatsApp + Embedded Signup
 - [ ] Panel: revisión de extracciones, inbox, métricas
+
+**Deuda asumida a propósito**
+- [ ] **`ADMIN_API_TOKEN` no es autenticación.** Un token compartido no identifica a nadie, no tiene roles y deja `audit_logs` sin usuario real detrás. Se elimina en P5, cuando entre la autenticación de Supabase. **Mientras siga así, el panel no debe exponerse públicamente.**
 
 **Bloqueantes de negocio (no técnicos)**
 - [ ] Cuenta de Meta Business verificada y número asignado a la Fundación

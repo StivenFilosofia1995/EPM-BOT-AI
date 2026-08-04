@@ -18,6 +18,7 @@ from src.presentation.errors import (
     unhandled_exception_handler,
     validation_exception_handler,
 )
+from src.presentation.routers import programacion
 
 logger = structlog.get_logger()
 
@@ -95,6 +96,7 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     api_v1_router = APIRouter(prefix=settings.api_v1_prefix)
+    api_v1_router.include_router(programacion.router)
     app.include_router(api_v1_router)
 
     return app

@@ -13,6 +13,7 @@ import asyncio
 import hashlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import Path
 from typing import Any, cast
 from uuid import UUID
@@ -50,13 +51,9 @@ class ImportResult:
         )
 
 
-def _content_hash(path: Path) -> str:
-    """SHA-256 del archivo, para no reprocesar contenido idéntico (P2A §6)."""
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+def _content_hash_bytes(content: bytes) -> str:
+    """SHA-256 del contenido, para no reprocesar lo idéntico (P2A §6)."""
+    return hashlib.sha256(content).hexdigest()
 
 
 async def _resolve_tenant(conn: AsyncConnection, slug: str) -> UUID:
@@ -107,6 +104,48 @@ async def _ensure_source(conn: AsyncConnection, tenant_id: UUID, venue_id: UUID)
     return cast("UUID", created)
 
 
+async def preview_excel(
+    *,
+    content: bytes,
+    tenant_slug: str,
+    venue_slug: str,
+    year: int,
+    month: int,
+    file_name: str = "programacion.xlsx",
+) -> ImportReport:
+    """Parsea el archivo y devuelve el informe **sin tocar la base**.
+
+    Es lo que alimenta la vista previa del panel: el operador ve exactamente
+    qué se interpretó de SU archivo antes de confirmar. Que no escriba nada es
+    la propiedad importante — se puede subir un archivo equivocado y revisarlo
+    sin consecuencias.
+
+    Necesita conexión solo para leer el catálogo de salas, que es lo que
+    permite resolver el campo `Lugar` en la vista previa igual que en la
+    importación real.
+    """
+    engine = create_async_engine(get_settings().migration_url)
+    try:
+        async with engine.connect() as conn:
+            tenant_id = await _resolve_tenant(conn, tenant_slug)
+            venue_id = await _resolve_venue(conn, tenant_id, venue_slug)
+            catalog = await _load_room_catalog(conn, tenant_id, venue_id)
+    finally:
+        await engine.dispose()
+
+    return await asyncio.to_thread(
+        XlsxProgramacionSource().parse,
+        BytesIO(content),
+        ImportContext(
+            venue_slug=venue_slug,
+            year=year,
+            month=month,
+            rooms=catalog,
+            file_name=file_name,
+        ),
+    )
+
+
 async def import_excel(  # noqa: PLR0913
     *,
     path: Path,
@@ -116,17 +155,41 @@ async def import_excel(  # noqa: PLR0913
     month: int,
     force: bool = False,
 ) -> ImportResult:
-    """Importa el archivo y deja las actividades en `draft`.
-
-    Leer el archivo, calcular su hash y parsearlo con openpyxl son operaciones
-    bloqueantes. Van en un hilo aparte para no congelar el bucle de eventos:
-    hoy esto lo llama la CLI y daría igual, pero en P2B lo llamará un endpoint
-    HTTP y ahí bloquearía a todos los demás usuarios mientras dura la carga.
-    """
+    """Importa desde una ruta en disco. Es el camino de la CLI."""
     if not await asyncio.to_thread(path.exists):
         raise FileNotFoundError(f"No existe el archivo: {path}")
 
-    digest = await asyncio.to_thread(_content_hash, path)
+    content = await asyncio.to_thread(path.read_bytes)
+    return await import_excel_bytes(
+        content=content,
+        tenant_slug=tenant_slug,
+        venue_slug=venue_slug,
+        year=year,
+        month=month,
+        force=force,
+        file_name=path.name,
+    )
+
+
+async def import_excel_bytes(  # noqa: PLR0913
+    *,
+    content: bytes,
+    tenant_slug: str,
+    venue_slug: str,
+    year: int,
+    month: int,
+    force: bool = False,
+    file_name: str = "programacion.xlsx",
+) -> ImportResult:
+    """Importa desde memoria y deja las actividades en `draft`.
+
+    Es el camino del panel: la subida del navegador nunca toca el disco.
+
+    Parsear con openpyxl y calcular el hash son operaciones bloqueantes y van
+    en un hilo aparte: llamadas desde un endpoint HTTP, congelarían el
+    servidor entero mientras dura la carga.
+    """
+    digest = await asyncio.to_thread(_content_hash_bytes, content)
     engine = create_async_engine(get_settings().migration_url)
     try:
         async with engine.begin() as conn:
@@ -148,19 +211,19 @@ async def import_excel(  # noqa: PLR0913
                     },
                 )
                 if previous is not None:
-                    empty = ImportReport(file_name=path.name, venue_slug=venue_slug)
+                    empty = ImportReport(file_name=file_name, venue_slug=venue_slug)
                     return ImportResult(empty, previous, 0, 0, skipped_unchanged=True)
 
             catalog = await _load_room_catalog(conn, tenant_id, venue_id)
             report = await asyncio.to_thread(
                 XlsxProgramacionSource().parse,
-                path,
+                BytesIO(content),
                 ImportContext(
                     venue_slug=venue_slug,
                     year=year,
                     month=month,
                     rooms=catalog,
-                    file_name=path.name,
+                    file_name=file_name,
                 ),
             )
 

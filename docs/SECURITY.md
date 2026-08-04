@@ -90,7 +90,41 @@ Además: Dependabot activo para actualizaciones de seguridad.
 - **Solo nginx publica puertos al host.** Backend, frontend y Redis viven en la red interna del compose.
 - Healthchecks en los cuatro servicios; `nginx` espera a que backend y frontend estén *healthy*, no solo arrancados.
 
-## 11. Checklist previa a producción
+## 11. Panel de administración: token temporal (P2B → P5)
+
+Las rutas de `/api/v1` exigen la cabecera `X-Admin-Token`, comparada con
+`ADMIN_API_TOKEN` mediante `secrets.compare_digest` (tiempo constante).
+
+**Esto no es autenticación y no pretende serlo.** Un token compartido:
+
+- no identifica a ningún usuario — `audit_logs` queda sin actor real;
+- no tiene roles: quien puede leer puede importar;
+- no se puede revocar por persona, solo rotar para todos;
+- no expira.
+
+Existe únicamente para que el panel no quede abierto entre P2B y P5. **Mientras
+siga aquí, el panel no debe exponerse a internet.** En P5 lo sustituye la
+autenticación de Supabase con usuarios, roles y sesiones, y este mecanismo se
+elimina por completo.
+
+Decisiones que sí endurecen lo que hay:
+
+- **Sin `ADMIN_API_TOKEN` configurado, las rutas responden `503`, no `200`.** Un
+  despliegue al que se le olvidó la variable se apaga en vez de quedar abierto.
+- **El token nunca llega al navegador.** El panel llama a `/api/backend/*`, un
+  proxy de Next.js que inyecta la cabecera en el servidor. Las variables se
+  llaman `ADMIN_API_TOKEN` y `BACKEND_URL` sin el prefijo `NEXT_PUBLIC_`
+  precisamente para que Next no las exponga al cliente.
+- **El tenant no lo elige el cliente**: se resuelve en el servidor y toda
+  consulta corre bajo RLS con el rol `epm_app`.
+- **Las subidas se validan por extensión y por tamaño ya leído**, no por
+  `content-type` ni `content-length`: ambos los controla quien envía.
+
+---
+
+---
+
+## 12. Checklist previa a producción
 
 - [ ] HTTPS obligatorio con redirección desde HTTP
 - [ ] `Strict-Transport-Security` activo
@@ -104,3 +138,4 @@ Además: Dependabot activo para actualizaciones de seguridad.
 - [ ] Responsable del tratamiento de datos designado
 - [ ] Backups automáticos de PostgreSQL **con restauración probada**
 - [ ] Enmascaramiento de números verificado en todos los logs
+- [ ] **`ADMIN_API_TOKEN` eliminado** y sustituido por la autenticación de Supabase con roles (§11)

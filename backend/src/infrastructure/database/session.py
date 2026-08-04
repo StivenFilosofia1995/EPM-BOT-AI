@@ -66,6 +66,29 @@ async def tenant_session(tenant_id: TenantId) -> AsyncIterator[AsyncSession]:
         yield session
 
 
+async def resolve_tenant_by_slug(slug: str) -> TenantId | None:
+    """Traduce un slug de tenant a su identificador.
+
+    Va por la conexión de administración a propósito: las políticas de RLS
+    filtran por `app.tenant_id`, y aquí todavía no sabemos cuál es — es
+    justamente lo que estamos averiguando. Es una consulta de arranque de
+    petición, no de datos de negocio.
+    """
+    from sqlalchemy import text  # noqa: PLC0415
+
+    settings = get_settings()
+    engine = create_async_engine(settings.migration_url)
+    try:
+        async with engine.connect() as conn:
+            value = await conn.scalar(
+                text("SELECT id FROM tenants WHERE slug = :slug AND status = 'active'"),
+                {"slug": slug},
+            )
+    finally:
+        await engine.dispose()
+    return TenantId(value) if value is not None else None
+
+
 async def dispose_engine() -> None:
     """Cierra el pool. Lo llama el `lifespan` de FastAPI al apagar."""
     await get_engine().dispose()

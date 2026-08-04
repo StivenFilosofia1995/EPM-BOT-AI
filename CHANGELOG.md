@@ -5,6 +5,20 @@ Versionado semántico. Commits en [Conventional Commits](https://www.conventiona
 
 ## [No publicado]
 
+### Añadido — P2B (primer corte): cargar la programación desde el navegador
+
+- **Botón para subir el Excel real.** `/programacion/importar`: selector de espacio y mes, zona de arrastrar y soltar, y **vista previa fila por fila antes de guardar nada** — semáforo por fila, motivo de cada advertencia en español y el texto literal de las celdas junto a lo interpretado. La confirmación persiste como `draft`; publicar sigue siendo un acto humano aparte (ADR 005).
+- **`/programacion`** — tabla de lo cargado con filtros por espacio, mes, estado, búsqueda y «solo con advertencias», paginada en servidor.
+- **API del panel**: `GET /venues`, `GET /activities` (filtros y paginación), `POST /programacion/import/preview` (parsea y **no escribe**), `POST /programacion/import` (persiste como `draft`, con `force` para reprocesar). Documentadas en `docs/API.md`.
+- **Refactor del importador**: `preview_excel` (parsear) e `import_excel_bytes` (persistir desde memoria) separados de `import_excel`, que sigue siendo la ruta de la CLI. La vista previa no puede escribir porque no tiene por dónde.
+- **Guarda `X-Admin-Token`** en todas las rutas de `/api/v1`, con comparación en tiempo constante. Sin `ADMIN_API_TOKEN` configurado las rutas responden `503`: un despliegue al que se le olvidó la variable se apaga en vez de quedar abierto. Es explícitamente temporal y se elimina en P5.
+- **Proxy `/api/backend/*` en Next.js**: el token se inyecta en el servidor y nunca llega al navegador. El cuerpo se reenvía como stream, sin pasar el Excel por memoria dos veces.
+- **28 tests nuevos** (196 en total): guarda de token en lectura y escritura, `503` sin token configurado, rechazo por extensión / tamaño / archivo vacío verificando además que el importador **ni siquiera se invoca**, límites de paginación, mes mal formado, y un test de integración contra Supabase que comprueba que la vista previa deja la base exactamente igual.
+
+Verificado de punta a punta con `Programacion_Formativa Biblioteca_Julio_2026.xlsx` a través del navegador: 23 filas → 50 actividades, 1 fila en ámbar (el Semillero, con `registro_no_es_url` y `out_of_month`), todas en `draft`, ninguna publicada. Reimportar con `force` deja el total en 50: actualiza, no duplica.
+
+> ⚠️ Un token compartido no es autenticación: no identifica a nadie ni tiene roles. **Mientras siga así, el panel no debe exponerse públicamente.**
+
 ### Añadido — P2A (primera mitad): importador de Excel
 
 - **Parsers deterministas** del formato de la Fundación, uno por trampa del contrato: detección de encabezados por contenido (no por posición ni por nombre de hoja), fechas en español (listas, «Todos los martes de julio», rangos que cruzan de mes), horarios (**`12:00 m.` es mediodía, no medianoche**), público con rango de edad, tabla de decisión de inscripción y resolución de salas contra catálogo. No pasan por el LLM (ADR 009).

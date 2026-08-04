@@ -79,6 +79,13 @@ class Settings(BaseSettings):
     app_secret_key: str = Field(min_length=16)
     token_encryption_key: str | None = None
     webhook_rate_limit_per_minute: int = 60
+    #: Token TEMPORAL de las rutas de administración, hasta que P5 traiga la
+    #: autenticación con Supabase. No es un sistema de autenticación: no tiene
+    #: roles ni sesiones ni identidad. Sin él, las rutas se rechazan.
+    admin_api_token: str | None = None
+    #: Tenant que atienden las rutas de administración mientras no exista
+    #: sesión de usuario de la que deducirlo.
+    default_tenant_slug: str = "fundacion-epm"
 
     # --- Redis --------------------------------------------------------------
     redis_url: str

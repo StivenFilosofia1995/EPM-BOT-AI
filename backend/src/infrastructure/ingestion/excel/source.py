@@ -13,7 +13,7 @@ import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import IO, Any
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -58,8 +58,14 @@ class ImportContext:
 class XlsxProgramacionSource:
     """Convierte un libro de Excel en `ActivityExtraction`."""
 
-    def parse(self, path: Path | str, context: ImportContext) -> ImportReport:
-        workbook = load_workbook(path, read_only=True, data_only=True)
+    def parse(self, source: Path | str | IO[bytes], context: ImportContext) -> ImportReport:
+        """Parsea desde una ruta o desde un archivo en memoria.
+
+        Acepta ambos porque hay dos caminos de entrada: la CLI trabaja con una
+        ruta en disco y el panel recibe la subida del navegador, que no llega a
+        tocar el sistema de archivos.
+        """
+        workbook = load_workbook(source, read_only=True, data_only=True)
         try:
             return self._parse_workbook(workbook, context)
         finally:

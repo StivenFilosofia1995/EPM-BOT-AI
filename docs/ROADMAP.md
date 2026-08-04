@@ -52,6 +52,17 @@ Se adelanta desde P5 porque **es el punto de control de calidad de todo el bot**
 
 Depende de los endpoints de P2A.
 
+**Entregado (primer corte, 2026-08-04):** el botón de carga. `/programacion/importar`
+con selector de espacio y mes, arrastrar y soltar, vista previa fila por fila con
+semáforo y advertencias en español, y confirmación que persiste como `draft`;
+`/programacion` con filtros y paginación. API en `docs/API.md`. Verificado con el
+archivo real desde el navegador: 23 filas → 50 actividades en `draft`.
+
+**Pendiente del resto de P2B:** mapeo de columnas editable, corrección en pantalla
+antes de importar, edición en línea, vista calendario con arrastre y choques de sala,
+cola de revisión lado a lado, historial con diff y reversión de lotes, y la
+publicación por lote — hoy los 50 borradores no se pueden publicar desde la interfaz.
+
 **Criterio:** un administrador sube el Excel del mes, corrige las filas con advertencia, mueve un taller de fecha, elimina una actividad cancelada y publica el mes completo — sin salir de la interfaz, sin SQL, y dejando rastro en `audit_logs`.
 
 ---
