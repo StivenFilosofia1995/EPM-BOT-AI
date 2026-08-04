@@ -23,8 +23,12 @@ from fastapi.responses import PlainTextResponse
 from sqlalchemy import text
 
 from src.application.messaging.receive_inbound import parse_webhook, store_inbound_message
+from src.application.messaging.respond_to_inbound import respond_to_inbound_message
 from src.config.settings import get_settings
-from src.domain.value_objects import TenantId
+from src.domain.value_objects import TenantId, WaId
+from src.infrastructure.ai.anthropic_adapter import get_ai_provider
+from src.infrastructure.knowledge.sql_knowledge_retriever import get_knowledge_retriever
+from src.infrastructure.meta.messaging_adapter import get_messaging_port
 from src.infrastructure.meta.signature import is_valid_signature
 
 logger = structlog.get_logger()
@@ -95,6 +99,32 @@ async def _resolve_channel(phone_number_id: str) -> tuple[TenantId, uuid.UUID] |
     return TenantId(row[0]), uuid.UUID(str(row[1]))
 
 
+async def _respond(
+    *,
+    tenant_id: TenantId,
+    channel_id: uuid.UUID,
+    wa_id: str,
+    profile_name: str | None,
+    message_text: str,
+) -> None:
+    """Envoltura de `respond_to_inbound_message` con los adaptadores
+    concretos, aislada para que un fallo (p. ej. credenciales de IA o de
+    Meta sin configurar) se registre sin tumbar la recepción del webhook."""
+    try:
+        await respond_to_inbound_message(
+            tenant_id=tenant_id,
+            channel_id=channel_id,
+            wa_id=WaId.parse(wa_id),
+            profile_name=profile_name,
+            inbound_text=message_text,
+            ai_provider=get_ai_provider(),
+            messaging=get_messaging_port(),
+            knowledge=get_knowledge_retriever(),
+        )
+    except Exception:  # noqa: BLE001
+        logger.exception("webhook_respond_failed", tenant_id=str(tenant_id))
+
+
 @router.post("/whatsapp")
 async def receive_webhook(request: Request) -> Response:
     """Recibe los eventos de Meta."""
@@ -137,9 +167,17 @@ async def receive_webhook(request: Request) -> Response:
                 )
                 continue
             tenant_id, channel_id = channel
-            await store_inbound_message(
+            is_new = await store_inbound_message(
                 tenant_id=tenant_id, channel_id=channel_id, message=message
             )
+            if is_new and message.type == "text" and message.text:
+                await _respond(
+                    tenant_id=tenant_id,
+                    channel_id=channel_id,
+                    wa_id=message.wa_id,
+                    profile_name=message.profile_name,
+                    message_text=message.text,
+                )
         except Exception:  # noqa: BLE001
             # Se registra con traza y se sigue con el resto: un mensaje malo no
             # puede tumbar la entrega entera ni provocar que Meta reintente.

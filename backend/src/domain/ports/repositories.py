@@ -27,6 +27,13 @@ class ConversationRepositoryPort(ABC):
     async def get_contact_by_wa_id(self, tenant_id: TenantId, wa_id: WaId) -> Contact | None: ...
 
     @abstractmethod
+    async def mark_privacy_notice_sent(
+        self, tenant_id: TenantId, contact_id: UUID, *, occurred_at: datetime
+    ) -> None:
+        """Registra `consent_at`, para no repetir el aviso de privacidad en
+        cada mensaje del mismo contacto (CLAUDE.md §7, Ley 1581 de 2012)."""
+
+    @abstractmethod
     async def get_or_create_conversation(
         self, tenant_id: TenantId, contact_id: UUID, channel_id: UUID
     ) -> Conversation: ...

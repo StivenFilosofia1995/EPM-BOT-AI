@@ -14,7 +14,7 @@
 | Tenant piloto | Fundación Grupo EPM — bot de programación cultural |
 | Caso de uso piloto | Responder por WhatsApp la programación mensual de Biblioteca EPM, Museo del Agua, Parque de los Deseos / Casa de la Música y las 14 UVA |
 | Motor de IA piloto | Claude (Anthropic) vía `AnthropicAdapter` |
-| Estado | `FASE 2 — ingesta de Excel operativa desde el panel (P2A parcial + P2B primer corte)`. Ver §11 |
+| Estado | `FASE 3 — el bot responde por WhatsApp (P4 y P3 primer corte)`. Ver §11 |
 | Última actualización | 2026-08-04 |
 
 ---
@@ -255,20 +255,26 @@ Toda variable nueva se agrega a `.env.example` **con comentario** en el mismo co
 
 - [x] **Carga desde el navegador (primer corte de P2B)**: `/programacion/importar` con vista previa fila por fila antes de guardar (semáforo, advertencias en español, texto literal de las celdas junto a lo interpretado) y `/programacion` con filtros; API `GET /venues`, `GET /activities`, `POST /programacion/import/preview` (no escribe) y `POST /programacion/import` (persiste como `draft`); guarda `X-Admin-Token` **temporal** y proxy de Next que mantiene el token fuera del navegador. 196 tests en verde. Ver `docs/API.md`.
 
+- [x] **Webhook de WhatsApp (P4, primer corte)**: verificación de firma HMAC y del handshake de Meta, persistencia idempotente del mensaje entrante, resolución de tenant por `phone_number_id`. Verificado en producción (Railway) contra la app real de Meta: handshake y entrega de mensajes reales confirmados. Ver `docs/API.md` y CHANGELOG.
+
+- [x] **El bot ya responde (P3, primer corte)**: `AnthropicAdapter`, `MetaMessagingAdapter` y `SqlKnowledgeRetriever` (los tres primeros adaptadores concretos de sus puertos) y `respond_to_inbound_message`, el orquestador conectado al webhook. Aviso de privacidad en el primer contacto, escalamiento a humano por palabra clave. **Simplificaciones deliberadas:** sin re-ranking semántico con `pgvector` (ADR 006 — no hay pipeline de embeddings todavía), sin clasificación de intención, sin cola/worker (responde en la misma petición del webhook). Páginas públicas `/privacidad` y `/eliminar-datos` para el alta de la app en Meta, contenido en borrador.
+
 **En curso**
 - [ ] Cola de revisión y publicación por lote: los 50 borradores siguen en `draft` y no hay pantalla para publicarlos
 
 **Siguiente**
 - [ ] Fuentes de respaldo de P2A: HTML, PDF de Issuu y páginas de espacio, con el estructurador por LLM
-- [ ] Adapter de Anthropic y orquestador conversacional
-- [ ] Webhook de WhatsApp + Embedded Signup
+- [ ] Pipeline de embeddings de `activities` y re-ranking semántico con `pgvector` (ADR 006), hoy pendiente
+- [ ] Clasificación de intención real, hoy es coincidencia de palabra clave sobre el texto crudo
+- [ ] Cola en Redis para el procesamiento del webhook, hoy es síncrono dentro de la misma petición
 - [ ] Panel: revisión de extracciones, inbox, métricas
+- [ ] Validar y reemplazar el contenido borrador de `/privacidad` y `/eliminar-datos` en cuanto haya responsable del tratamiento designado
 
 **Deuda asumida a propósito**
 - [ ] **`ADMIN_API_TOKEN` no es autenticación.** Un token compartido no identifica a nadie, no tiene roles y deja `audit_logs` sin usuario real detrás. Se elimina en P5, cuando entre la autenticación de Supabase. **Mientras siga así, el panel no debe exponerse públicamente.**
 
 **Bloqueantes de negocio (no técnicos)**
-- [ ] Cuenta de Meta Business verificada y número asignado a la Fundación
+- [x] Cuenta de Meta Business verificada y número asignado a la Fundación
 - [ ] Autorización formal de uso de marca y datos
 - [ ] Responsable del tratamiento de datos designado
 - [ ] Horarios faltantes (Biblioteca general, UVA) — ver `KB_FUNDACION_EPM.md` §5
