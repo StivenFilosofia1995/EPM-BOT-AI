@@ -3,10 +3,11 @@
 esta clase desde el resto del código."""
 
 import time
-from typing import Any
+from typing import Any, cast
 
 import anthropic
 import structlog
+from anthropic.types import MessageParam
 
 from src.config.settings import Settings, get_settings
 from src.domain.ports.ai_provider import (
@@ -57,12 +58,19 @@ class AnthropicAdapter(AIProviderPort):
         max_tokens: int = 1024,
     ) -> AIResponse:
         start = time.perf_counter()
+        # `system`/`tools` se omiten del todo cuando no llegan, en vez de
+        # mandar el sentinela "no dado" del SDK: así no depende del nombre
+        # exacto que use la versión instalada (`NotGiven`, `Omit`, ...).
+        optional: dict[str, Any] = {}
+        if system is not None:
+            optional["system"] = system
+        if tools is not None:
+            optional["tools"] = tools
         response = await self._client.messages.create(
             model=self._model,
             max_tokens=max_tokens,
-            system=system or anthropic.NOT_GIVEN,
-            messages=_to_anthropic_messages(messages),
-            tools=tools or anthropic.NOT_GIVEN,
+            messages=cast(list[MessageParam], _to_anthropic_messages(messages)),
+            **optional,
         )
         latency_ms = round((time.perf_counter() - start) * 1000)
 
@@ -124,11 +132,14 @@ class AnthropicAdapter(AIProviderPort):
             last["content"] = [*image_blocks, {"type": "text", "text": last["content"]}]
 
         start = time.perf_counter()
+        optional: dict[str, Any] = {}
+        if system is not None:
+            optional["system"] = system
         response = await self._client.messages.create(
             model=self._model,
             max_tokens=max_tokens,
-            system=system or anthropic.NOT_GIVEN,
-            messages=text_messages,
+            messages=cast(list[MessageParam], text_messages),
+            **optional,
         )
         latency_ms = round((time.perf_counter() - start) * 1000)
         text = "".join(block.text for block in response.content if block.type == "text")
