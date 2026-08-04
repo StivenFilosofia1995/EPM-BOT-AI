@@ -18,7 +18,7 @@ from src.presentation.errors import (
     unhandled_exception_handler,
     validation_exception_handler,
 )
-from src.presentation.routers import programacion, webhooks
+from src.presentation.routers import legal, programacion, webhooks
 
 logger = structlog.get_logger()
 
@@ -94,6 +94,8 @@ def create_app() -> FastAPI:
     @app.get("/health", tags=["health"])
     async def health() -> dict[str, str]:
         return {"status": "ok"}
+
+    app.include_router(legal.router)
 
     api_v1_router = APIRouter(prefix=settings.api_v1_prefix)
     api_v1_router.include_router(programacion.router)
