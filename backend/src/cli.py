@@ -6,6 +6,11 @@
     python -m src.cli seed --tenant fundacion-epm
 
     python -m src.cli register-channel --tenant fundacion-epm
+
+    python -m src.cli publish --tenant fundacion-epm --venue biblioteca-epm \
+        --month 2026-07              # simula; no publica
+    python -m src.cli publish --tenant fundacion-epm --venue biblioteca-epm \
+        --month 2026-07 --confirm    # publica de verdad
 """
 
 import argparse
@@ -14,6 +19,7 @@ import sys
 from pathlib import Path
 
 from src.application.ingestion.import_excel import import_excel
+from src.application.knowledge.publish_activities import publish_activities
 from src.infrastructure.database.register_channel import register_channel
 from src.infrastructure.database.seed import load_seed
 
@@ -71,12 +77,37 @@ def _build_parser() -> argparse.ArgumentParser:
         "--display-number", default="", help="Número visible, solo informativo"
     )
 
+    publish = sub.add_parser(
+        "publish",
+        help="Publica actividades en borrador. Sin --confirm solo simula.",
+    )
+    publish.add_argument("--tenant", default="fundacion-epm")
+    publish.add_argument("--venue", help="Limita a un espacio (slug)")
+    publish.add_argument("--month", help="Limita a un mes, AAAA-MM (hora de Bogotá)")
+    publish.add_argument(
+        "--confirm",
+        action="store_true",
+        help="Publica de verdad. Sin esta bandera solo informa qué se publicaría.",
+    )
+
     return parser
 
 
 async def _run(args: argparse.Namespace) -> int:
     if args.command == "seed":
         print((await load_seed(args.tenant)).render())  # noqa: T201
+        return 0
+
+    if args.command == "publish":
+        # Nombre distinto del `result` de la importación: reusarlo haría que
+        # mypy viera dos tipos incompatibles en la misma variable.
+        publication = await publish_activities(
+            tenant_slug=args.tenant,
+            venue_slug=args.venue,
+            month=args.month,
+            confirm=args.confirm,
+        )
+        print(publication.render())  # noqa: T201
         return 0
 
     if args.command == "register-channel":
